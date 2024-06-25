@@ -22,6 +22,9 @@ blogsRouter.get("/:id", async (request, response) => {
 
 blogsRouter.post("/", async (request, response) => {
     const { body, user } = request
+    if(!user) {
+    response.status(401).end()
+}
     const blog = new Blog({
         title: body.title,
         author: body.author,
@@ -34,6 +37,7 @@ blogsRouter.post("/", async (request, response) => {
     user.blogs = user.blogs || []
     user.blogs = user.blogs.concat(savedBlog._id)
     await user.save()
+
 
     response.status(201).json(savedBlog)
 })
@@ -68,7 +72,7 @@ blogsRouter.put("/:id", async (request, response) => {
     } else if (validationError) {
         return response.status(400).json({ error: validationError.message })
     }
-    if (request.user && blog.user.toString() === request.user._id.toString()) {
+    if (request.user && blog.user === request.user._id.toString()) {
         if (body.title) {
             blogUpdate.title = body.title
         }
@@ -80,7 +84,11 @@ blogsRouter.put("/:id", async (request, response) => {
         }
         await Blog.findByIdAndUpdate(request.params.id, blogUpdate, { new: true })
         response.status(200).json(blogUpdate)
-    } else {
+    } if (request.user && body.likes) {
+await Blog.findByIdAndUpdate(request.params.id, blogUpdate, {new: true})
+        response.status(200).json(blogUpdate)   
+    }
+else {
         response.status(401).end()
     }
 })

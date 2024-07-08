@@ -226,6 +226,7 @@ describe("updating a blog", () => {
             title: "new title",
             author: "new author",
             url: "new url",
+            likes: 1,
         }
         await api
             .put(`/api/blogs/${responseBlog.body.id}`)

@@ -92,7 +92,6 @@ describe("when there is initially one user in db", () => {
         newUser.username = "user"
         await api.post("/api/users").send(newUser).expect(400)
         assert.strictEqual(usersAtEnd.length, usersAtStart.length)
-
     })
 
     test("fails with status code 400 if name, username or password is missing", async () => {
@@ -199,24 +198,22 @@ describe("user authentication", () => {
         }
         const responseBlog = await api
             .post("/api/blogs")
-            .set("Authorization", `${token}`)
+            .set("Authorization", token)
             .send(blogToSend)
             .expect(201)
 
-        const blog = responseBlog.body
-        blog.url = "new url"
+        const blogToPut = { likes: 1, ...blogToSend }
+        await api.put(`/api/blogs/${responseBlog.body.id}`).send(blogToPut).expect(401)
 
-        await api.put(`/api/blogs/${blog.id}`).send(blog).expect(401)
-        const uneditedBlog = await Blog.findById(blog.id)
-        assert.strictEqual(uneditedBlog.url, "url")
+        const uneditedBlog = await Blog.findById(responseBlog.body.id)
+        assert.strictEqual(uneditedBlog.likes, 0)
 
         const returnedBlog = await api
-            .put(`/api/blogs/${blog.id}`)
-            .set("Authorization", `${token}`)
-            .send(blog)
+            .put(`/api/blogs/${responseBlog.body.id}`)
+            .set("Authorization", token)
+            .send(blogToPut)
             .expect(200)
-
-        assert.strictEqual(returnedBlog.body.url, "new url")
+        assert.strictEqual(returnedBlog.body.likes, 1)
     })
     test("is required to delete blogs", async () => {
         const token = await helper.userAccountForTests()
@@ -230,7 +227,7 @@ describe("user authentication", () => {
 
         const responseBlog = await api
             .post("/api/blogs")
-            .set("Authorization", `${token}`)
+            .set("Authorization", token)
             .send(blog)
             .expect(201)
 
@@ -244,7 +241,7 @@ describe("user authentication", () => {
 
         await api
             .delete(`/api/blogs/${responseBlog.body.id}`)
-            .set("Authorization", `${token}`)
+            .set("Authorization", token)
             .expect(204)
 
         const blogsAfterRealDelete = await helper.blogsInDb()

@@ -40,6 +40,12 @@ app.use("/api/blogs", userExtractor, blogsRouter)
 app.use("/api/users", usersRouter)
 app.use("/api/login", loginRouter)
 
+// Testing route
+if (process.env.NODE_ENV === "test") {
+    const testingRouter = require("./controllers/testing")
+    app.use("/api/testing", testingRouter)
+}
+
 // Error Handling Middleware
 app.use(unknownEndpoint)
 app.use(errorHandler)
